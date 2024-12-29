@@ -34,7 +34,7 @@ jobs:
 
       - name: Build
         run: |
-          msbuild ServerSideScreenshotTest1\ServerSideScreenshotTest1.csproj -t:rebuild -property:Configuration=Release -property:ReferencePath="${{ env.REFERENCES_PATH }}"
+          msbuild Push\Push.csproj -t:rebuild -property:Configuration=Release -property:ReferencePath="${{ env.REFERENCES_PATH }}"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
