@@ -39,5 +39,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ServerSideScreenshotTest1
-          path: "ServerSideScreenshotTest1/bin/Release/net4.8.1/ServerSideScreenshotTest1.dll"
+          name: Push
+          path: "Push/bin/Release/net4.8.1/Push.dll"
