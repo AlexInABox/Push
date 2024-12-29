@@ -14,12 +14,12 @@
         public override string Prefix => "Push";
         public override string Name => "Push";
         public override string Author => "AlexInABox";
-        public override Version Version => new Version(1, 0, 0);
+        public override Version Version => new Version(1, 0, 1);
 
         private static Push Singleton;
         public static Push Instance => Singleton;
         private SettingValueReceived settingValueReceived;
-        
+
         public override PluginPriority Priority { get; } = PluginPriority.Last;
         public override void OnEnabled()
         {

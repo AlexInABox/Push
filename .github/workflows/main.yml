@@ -1,4 +1,4 @@
-name: ServerSideScreenshotTest1 Build
+name: Push Build & Release
 on:
   push:
     branches:

@@ -1,3 +1,5 @@
+using PlayerRoles;
+
 namespace Push.Events
 {
     using UserSettings.ServerSpecific;
@@ -26,6 +28,10 @@ namespace Push.Events
 
         private void TryToPush(Player player)
         {
+            // Check if player is a human
+            if (!player.IsHuman)
+                return;
+            
             // Get the current epoch time in seconds
             float currentTime = Time.time;
 
@@ -62,8 +68,11 @@ namespace Push.Events
 
                     string hintContent = Push.Instance.Config.PlayerPushSuccessful.Content;
                     string customizedHint = hintContent.Replace("$player", targetedPlayer.Nickname);
-
                     player.ShowHint(customizedHint, Push.Instance.Config.PlayerPushSuccessful.Duration);
+                    
+                    hintContent = Push.Instance.Config.PlayerGotPushed.Content;
+                    customizedHint = hintContent.Replace("$player", player.Nickname);
+                    targetedPlayer.ShowHint(customizedHint, Push.Instance.Config.PlayerGotPushed.Duration);
                     
                     // Update the player's cooldown time
                     _pushCooldowns[player.Id] = currentTime;
