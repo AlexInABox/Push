@@ -40,8 +40,9 @@ namespace Push.Events
                 remainingCooldown = Mathf.Round(remainingCooldown * 10f) / 10f; // Round to one decimal place
                 Log.Debug("Player is on cooldown for pushing.");
                 player.ShowHint(
-                    Push.Instance.Config.PlayerPushCooldown.Content + " " + remainingCooldown + " seconds remaining...",
-                    Push.Instance.Config.PlayerPushCooldown.Duration);
+                    Push.Translations.PlayerPushCooldownHint.Replace("$remainingCooldown$",
+                        remainingCooldown.ToString()),
+                    Push.Instance.Config.PlayerPushHintDuration);
                 return;
             }
 
@@ -62,32 +63,18 @@ namespace Push.Events
             // Check if the hit object is a player
             if (Player.TryGet(raycastHit.transform.gameObject, out Player targetedPlayer))
             {
-                float angle = Vector3.Angle(player.Rotation * Vector3.forward,
-                    targetedPlayer.Rotation * Vector3.forward);
-                const float MAX_ALLOWED_ANGLE = 360f; // Maximum angle (in degrees) to allow the push
+                Timing.RunCoroutine(ApplyPushForce(targetedPlayer, forwardDirection.normalized));
 
-                if (angle <= MAX_ALLOWED_ANGLE)
-                {
-                    Timing.RunCoroutine(ApplyPushForce(targetedPlayer, forwardDirection.normalized));
+                player.ShowHint(
+                    Push.Translations.PlayerPushSuccessfulHint.Replace("$player$", targetedPlayer.Nickname),
+                    Push.Instance.Config.PlayerPushSuccessfulHintDuration);
 
-                    string hintContent = Push.Instance.Config.PlayerPushSuccessful.Content;
-                    string customizedHint = hintContent.Replace("$player", targetedPlayer.Nickname);
-                    player.ShowHint(customizedHint, Push.Instance.Config.PlayerPushSuccessful.Duration);
+                targetedPlayer.ShowHint(
+                    Push.Translations.PlayerGotPushedHint.Replace("$player$", player.Nickname),
+                    Push.Instance.Config.PlayerGotPushedHintDuration);
 
-                    hintContent = Push.Instance.Config.PlayerGotPushed.Content;
-                    customizedHint = hintContent.Replace("$player", player.Nickname);
-                    targetedPlayer.ShowHint(customizedHint, Push.Instance.Config.PlayerGotPushed.Duration);
-
-                    // Update the player's cooldown time
-                    _pushCooldowns[player.Id] = currentTime;
-                }
-                else
-                {
-                    Log.Debug("Player is not within the allowed angle for pushing.");
-                    Log.Debug(angle.ToString());
-                    player.ShowHint(Push.Instance.Config.PlayerPushWrongAngle.Content,
-                        Push.Instance.Config.PlayerPushWrongAngle.Duration);
-                }
+                // Update the player's cooldown time
+                _pushCooldowns[player.Id] = currentTime;
             }
         }
 

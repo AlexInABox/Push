@@ -9,14 +9,15 @@
     using Exiled.API.Features.Core.UserSettings;
 
 
-    public class Push : Plugin<Config>
+    public class Push : Plugin<Config, Translation>
     {
         public override string Prefix => "Push";
         public override string Name => "Push";
         public override string Author => "AlexInABox";
-        public override Version Version => new Version(1, 0, 1);
+        public override Version Version => new Version(1, 1, 1);
 
         private static Push Singleton;
+        public static Translation Translations => Singleton.Translation;
         public static Push Instance => Singleton;
         private SettingValueReceived settingValueReceived;
 
@@ -33,8 +34,8 @@
             IEnumerable<SettingBase> settingBases = new SettingBase[]
             {
                 header,
-                new KeybindSetting(Config.KeybindId, "Push someone in front of you!", default,
-                    hintDescription: "Pressing this will push the player in front of you! Don't be mean :3"),
+                new KeybindSetting(Config.KeybindId, Translation.KeybindSettingLabel, default,
+                    hintDescription: Translation.KeybindSettingHintDescription),
             };
 
             SettingBase.Register(settingBases);
