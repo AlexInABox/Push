@@ -21,6 +21,7 @@
         private SettingValueReceived settingValueReceived;
 
         public override PluginPriority Priority { get; } = PluginPriority.Last;
+
         public override void OnEnabled()
         {
             Singleton = this;
@@ -32,7 +33,8 @@
             IEnumerable<SettingBase> settingBases = new SettingBase[]
             {
                 header,
-                new KeybindSetting(Config.KeybindId, "Push someone in front of you!", default, hintDescription: "Pressing this will push the player in front of you! Don't be mean :3"),
+                new KeybindSetting(Config.KeybindId, "Push someone in front of you!", default,
+                    hintDescription: "Pressing this will push the player in front of you! Don't be mean :3"),
             };
 
             SettingBase.Register(settingBases);
