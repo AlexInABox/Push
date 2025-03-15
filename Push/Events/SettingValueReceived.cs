@@ -81,7 +81,7 @@ namespace Push.Events
 
         private IEnumerator<float> ApplyPushForce(Player player, Vector3 direction)
         {
-            const float PUSH_DISTANCE = 3f; // total push distance
+            const float PUSH_DISTANCE = 5f; // total push distance
             const float PUSH_DURATION = 0.000000000001f; //sweet spot!
 
             for (int i = 0; i < 20; i++) //repeat the loop infinitely
