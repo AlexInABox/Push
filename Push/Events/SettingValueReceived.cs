@@ -59,8 +59,10 @@ namespace Push.Events
                     ~(1 << 1 | 1 << 13 | 1 << 16 | 1 << 28)))
                 return;
 
-            // Log the object hit by the raycast
-            Log.Debug($"Hit object: {raycastHit.transform.gameObject.name}");
+            // Log the object name and its layer
+            GameObject hitObject = raycastHit.transform.gameObject;
+            string layerName = LayerMask.LayerToName(hitObject.layer);
+            Log.Debug($"Hit object: {hitObject.name}, Layer: {layerName} ({hitObject.layer})");
 
             // Check if the hit object is a player
             if (Player.TryGet(raycastHit.transform.gameObject, out Player targetedPlayer))
@@ -86,9 +88,20 @@ namespace Push.Events
 
             float PUSH_DISTANCE = Push.Instance.Config.PushForce; // total push distance
             const float PUSH_DURATION = 0.000000000001f; //sweet spot!
+            
+            const int mask = (1 << 0)  // Default
+                       | (1 << 25) // OnlyWorldCollision
+                       | (1 << 27) // Door
+                       | (1 << 29); // Fence
 
-            for (int i = 0; i < 20; i++) //repeat the loop infinitely
+            for (int i = 0; i < 20; i++)
             {
+                if (Physics.Raycast(player.Position, direction, out RaycastHit raycastHit, 1f, mask))
+                {
+                    Log.Debug("Cant push since wall.");
+                    break;
+                }
+
                 player.Position += direction * (PUSH_DISTANCE / 50);
                 yield return Timing.WaitForSeconds((PUSH_DURATION / 50));
             }

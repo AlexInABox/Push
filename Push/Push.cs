@@ -14,7 +14,7 @@
         public override string Prefix => "Push";
         public override string Name => "Push";
         public override string Author => "AlexInABox";
-        public override Version Version => new Version(1, 1, 1);
+        public override Version Version => new Version(1, 3, 1);
 
         private static Push Singleton;
         public static Translation Translations => Singleton.Translation;
