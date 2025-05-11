@@ -29,7 +29,7 @@ namespace Push.Events
         private void TryToPush(Player player)
         {
             // Check if player is a human
-            if (!player.IsHuman)
+            if (!player.IsHuman || player.IsCuffed)
                 return;
 
             // Get the current epoch time in seconds
