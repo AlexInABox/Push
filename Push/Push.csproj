@@ -13,6 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ExMod.Exiled" Version="9.6.0-beta7" />
+    <PackageReference Include="ExMod.Exiled" Version="9.6.0" />
   </ItemGroup>
 </Project>

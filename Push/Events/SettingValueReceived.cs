@@ -1,5 +1,3 @@
-using UnityEngine.Experimental.GlobalIllumination;
-
 namespace Push.Events
 {
     using UserSettings.ServerSpecific;
