@@ -84,6 +84,12 @@ public static class EventHandlers
         
         if (Player.TryGet(raycastHit.transform.gameObject, out Player targetedPlayer))
         {
+            if (pushingPlayer == targetedPlayer) 
+            {
+                Logger.Debug("Player tried to push themselves.", Plugin.Instance.Config.Debug);
+                return;
+            }
+            
             forwardDirection.y = 0;
             Timing.RunCoroutine(ApplyPushForce(targetedPlayer, forwardDirection.normalized));
             
