@@ -19,10 +19,8 @@ public static class EventHandlers
         ServerSpecificSettingsSync.DefinedSettings =
         [
             new SSGroupHeader("Push"),
-            new SSKeybindSetting(Plugin.Instance.Config.KeybindId, Plugin.Instance.Translation.KeybindSettingLabel,
-                hint: Plugin.Instance.Translation.KeybindSettingHintDescription,
-                suggestedKey: KeyCode.None)
-        ];
+            new SSKeybindSetting(Plugin.Instance.Config.KeybindId, Plugin.Instance.Translation.KeybindSettingLabel, KeyCode.None, false, false,
+                Plugin.Instance.Translation.KeybindSettingHintDescription)];
         ServerSpecificSettingsSync.SendToAll();
     }
 
