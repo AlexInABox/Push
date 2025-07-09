@@ -2,9 +2,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using LabApi.Features.Wrappers;
 using MEC;
+
+using System;
 using UnityEngine;
 using UserSettings.ServerSpecific;
 using Logger = LabApi.Features.Console.Logger;
+using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Handlers;
 
 namespace Push;
 
@@ -15,13 +19,23 @@ public static class EventHandlers
     public static void RegisterEvents()
     {
         ServerSpecificSettingsSync.ServerOnSettingValueReceived += OnSSSReceived;
-
-        ServerSpecificSettingsSync.DefinedSettings =
-        [
+        
+        var extra = new ServerSpecificSettingBase[]
+        {
             new SSGroupHeader("Push"),
-            new SSKeybindSetting(Plugin.Instance.Config.KeybindId, Plugin.Instance.Translation.KeybindSettingLabel, KeyCode.None, false, false,
-                Plugin.Instance.Translation.KeybindSettingHintDescription)];
-        ServerSpecificSettingsSync.SendToAll();
+            new SSKeybindSetting(
+                Plugin.Instance.Config.KeybindId,
+                Plugin.Instance.Translation.KeybindSettingLabel,
+                KeyCode.None, false, false,
+                Plugin.Instance.Translation.KeybindSettingHintDescription)
+        };
+
+        var existing = ServerSpecificSettingsSync.DefinedSettings ?? [];
+        var combined = new ServerSpecificSettingBase[existing.Length + extra.Length];
+        existing.CopyTo(combined, 0);
+        extra.CopyTo(combined, existing.Length);
+        ServerSpecificSettingsSync.DefinedSettings = combined;
+        ServerSpecificSettingsSync.UpdateDefinedSettings();
     }
 
     public static void UnregisterEvents()
