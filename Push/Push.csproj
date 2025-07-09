@@ -11,8 +11,6 @@
         <Reference Include="UnityEngine.CoreModule" HintPath="$(REFERENCES_PATH)\UnityEngine.CoreModule.dll" Private="false"/>
         <Reference Include="UnityEngine.PhysicsModule" HintPath="$(REFERENCES_PATH)\UnityEngine.PhysicsModule.dll" Private="false"/>
         <Reference Include="CommandSystem.Core" HintPath="$(REFERENCES_PATH)\CommandSystem.Core.dll" Private="false"/>
-        <Reference Include="LabApi" HintPath="$(REFERENCES_PATH)\LabApi.dll" />
-
     </ItemGroup>
 
     <ItemGroup>
@@ -20,5 +18,6 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Northwood.LabAPI" Version="1.1.0" />
     </ItemGroup>
 </Project>
