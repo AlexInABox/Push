@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Globalization;
+using CustomPlayerEffects;
 using LabApi.Features.Wrappers;
 using MEC;
 using UnityEngine;
@@ -86,7 +87,7 @@ public static class EventHandlers
         {
             if (pushingPlayer == targetedPlayer) 
             {
-                Logger.Debug("Player tried to push themselves.", Plugin.Instance.Config.Debug);
+                Logger.Debug("Player tried to push themselves.");
                 return;
             }
             
@@ -117,6 +118,8 @@ public static class EventHandlers
                          | (1 << 25) // OnlyWorldCollision
                          | (1 << 27) // Door
                          | (1 << 29); // Fence
+        
+        player.EnableEffect<Ensnared>(); // Freeze the users movement
 
         for (int i = 0; i < 20; i++)
         {
@@ -130,7 +133,9 @@ public static class EventHandlers
             player.Position += direction * (pushDistance / 50);
             yield return Timing.WaitForSeconds(pushDuration / 50);
         }
-
+        
+        player.DisableEffect<Ensnared>(); // Unfreeze the users movement
+        
         Logger.Debug($"Push duration per step: {pushDuration / 50}", Plugin.Instance.Config.Debug);
         Logger.Debug("Push force applied", Plugin.Instance.Config.Debug);
     }
