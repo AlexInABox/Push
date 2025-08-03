@@ -20,7 +20,7 @@ public class Plugin : Plugin<Config>
 
     public override void Enable()
     {
-        Plugin.Instance = this;
+        Instance = this;
         if (Config == null)
         {
             Logger.Error("There is an error while loading the config. Reverting to the default one.");
@@ -42,4 +42,3 @@ public class Plugin : Plugin<Config>
         EventHandlers.UnregisterEvents();
     }
 }
-

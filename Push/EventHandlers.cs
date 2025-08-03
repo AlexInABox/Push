@@ -3,13 +3,9 @@ using System.Globalization;
 using CustomPlayerEffects;
 using LabApi.Features.Wrappers;
 using MEC;
-
-using System;
 using UnityEngine;
 using UserSettings.ServerSpecific;
 using Logger = LabApi.Features.Console.Logger;
-using LabApi.Events.Arguments.PlayerEvents;
-using LabApi.Events.Handlers;
 
 namespace Push;
 
@@ -20,8 +16,8 @@ public static class EventHandlers
     public static void RegisterEvents()
     {
         ServerSpecificSettingsSync.ServerOnSettingValueReceived += OnSSSReceived;
-        
-        var extra = new ServerSpecificSettingBase[]
+
+        ServerSpecificSettingBase[] extra = new ServerSpecificSettingBase[]
         {
             new SSGroupHeader("Push"),
             new SSKeybindSetting(
@@ -31,8 +27,8 @@ public static class EventHandlers
                 Plugin.Instance.Translation.KeybindSettingHintDescription)
         };
 
-        var existing = ServerSpecificSettingsSync.DefinedSettings ?? [];
-        var combined = new ServerSpecificSettingBase[existing.Length + extra.Length];
+        ServerSpecificSettingBase[] existing = ServerSpecificSettingsSync.DefinedSettings ?? [];
+        ServerSpecificSettingBase[] combined = new ServerSpecificSettingBase[existing.Length + extra.Length];
         existing.CopyTo(combined, 0);
         extra.CopyTo(combined, existing.Length);
         ServerSpecificSettingsSync.DefinedSettings = combined;
@@ -48,7 +44,7 @@ public static class EventHandlers
     {
         if (!Player.TryGet(hub.networkIdentity, out Player player))
             return;
-        
+
         Logger.Debug($"Player {player.Nickname} received setting: {ev.SettingId}", Plugin.Instance.Config.Debug);
 
         // Check if the setting is our push keybind and if the key is pressed
@@ -69,7 +65,8 @@ public static class EventHandlers
 
         // Check if the pushingPlayer is on cooldown
         float currentTime = Time.time;
-        if (PushCooldowns.TryGetValue(pushingPlayer.PlayerId, out float lastPushTime) && currentTime - lastPushTime < 10f)
+        if (PushCooldowns.TryGetValue(pushingPlayer.PlayerId, out float lastPushTime) &&
+            currentTime - lastPushTime < 10f)
         {
             float remainingCooldown = 10f - (currentTime - lastPushTime);
             remainingCooldown = Mathf.Round(remainingCooldown * 10f) / 10f;
@@ -78,7 +75,7 @@ public static class EventHandlers
             pushingPlayer.SendHint(
                 Plugin.Instance.Translation.PlayerPushCooldownHint.Replace("$remainingCooldown$",
                     remainingCooldown.ToString(CultureInfo.CurrentCulture)),
-                duration: Plugin.Instance.Config.PlayerPushHintDuration
+                Plugin.Instance.Config.PlayerPushHintDuration
             );
 
             Logger.Debug("Player is on cooldown for pushing.", Plugin.Instance.Config.Debug);
@@ -94,28 +91,28 @@ public static class EventHandlers
                 ~((1 << 1) | (1 << 13) | (1 << 16) | (1 << 28))))
             return;
 
-        
+
         if (Player.TryGet(raycastHit.transform.gameObject, out Player targetedPlayer))
         {
-            if (pushingPlayer == targetedPlayer) 
+            if (pushingPlayer == targetedPlayer)
             {
                 Logger.Debug("Player tried to push themselves.");
                 return;
             }
-            
+
             forwardDirection.y = 0;
             Timing.RunCoroutine(ApplyPushForce(targetedPlayer, forwardDirection.normalized));
-            
+
             // Show hint to the pushingPlayer
             pushingPlayer.SendHint(
-                text: Plugin.Instance.Translation.PlayerPushSuccessfulHint.Replace("$player$", targetedPlayer.Nickname),
-                duration: Plugin.Instance.Config.PlayerPushHintDuration);
+                Plugin.Instance.Translation.PlayerPushSuccessfulHint.Replace("$player$", targetedPlayer.Nickname),
+                Plugin.Instance.Config.PlayerPushHintDuration);
 
             // Show hint to the targetedPlayer
             targetedPlayer.SendHint(
-                text: Plugin.Instance.Translation.PlayerGotPushedHint.Replace("$player$", pushingPlayer.Nickname),
-                duration: Plugin.Instance.Config.PlayerGotPushedHintDuration);
-            
+                Plugin.Instance.Translation.PlayerGotPushedHint.Replace("$player$", pushingPlayer.Nickname),
+                Plugin.Instance.Config.PlayerGotPushedHintDuration);
+
             // Update the player's cooldown time
             PushCooldowns[pushingPlayer.PlayerId] = currentTime;
         }
@@ -130,7 +127,7 @@ public static class EventHandlers
                          | (1 << 25) // OnlyWorldCollision
                          | (1 << 27) // Door
                          | (1 << 29); // Fence
-        
+
         player.EnableEffect<Ensnared>(); // Freeze the users movement
 
         for (int i = 0; i < 20; i++)
@@ -145,9 +142,9 @@ public static class EventHandlers
             player.Position += direction * (pushDistance / 50);
             yield return Timing.WaitForSeconds(pushDuration / 50);
         }
-        
+
         player.DisableEffect<Ensnared>(); // Unfreeze the users movement
-        
+
         Logger.Debug($"Push duration per step: {pushDuration / 50}", Plugin.Instance.Config.Debug);
         Logger.Debug("Push force applied", Plugin.Instance.Config.Debug);
     }
