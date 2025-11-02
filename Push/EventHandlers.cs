@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using CustomPlayerEffects;
 using LabApi.Features.Wrappers;
+using MapGeneration;
 using MEC;
+using PlayerRoles;
 using UnityEngine;
 using UserSettings.ServerSpecific;
 using Logger = LabApi.Features.Console.Logger;
@@ -21,7 +23,7 @@ public static class EventHandlers
         {
             new SSGroupHeader("Push"),
             new SSKeybindSetting(
-                Plugin.Instance.Config.KeybindId,
+                Plugin.Instance.Config!.KeybindId,
                 Plugin.Instance.Translation.KeybindSettingLabel,
                 KeyCode.None, false, false,
                 Plugin.Instance.Translation.KeybindSettingHintDescription)
@@ -45,11 +47,11 @@ public static class EventHandlers
         if (!Player.TryGet(hub.networkIdentity, out Player player))
             return;
 
-        Logger.Debug($"Player {player.Nickname} received setting: {ev.SettingId}", Plugin.Instance.Config.Debug);
+        Logger.Debug($"Player {player.Nickname} received setting: {ev.SettingId}", Plugin.Instance.Config!.Debug);
 
         // Check if the setting is our push keybind and if the key is pressed
         if (ev is SSKeybindSetting keybindSetting &&
-            keybindSetting.SettingId == Plugin.Instance.Config.KeybindId &&
+            keybindSetting.SettingId == Plugin.Instance.Config!.KeybindId &&
             keybindSetting.SyncIsPressed)
             TryToPush(player);
     }
@@ -57,9 +59,10 @@ public static class EventHandlers
     private static void TryToPush(Player pushingPlayer)
     {
         // Check if pushingPlayer is a human and not handcuffed
-        if (!pushingPlayer.IsHuman || pushingPlayer.IsDisarmed)
+        if ((!pushingPlayer.IsHuman && pushingPlayer.Role != RoleTypeId.Scp0492) || pushingPlayer.IsDisarmed)
         {
-            Logger.Debug($"{pushingPlayer.Nickname} is not a human or is disarmed.", Plugin.Instance.Config.Debug);
+            Logger.Debug($"{pushingPlayer.Nickname} is not a human (or zombie) or is disarmed.",
+                Plugin.Instance.Config!.Debug);
             return;
         }
 
@@ -75,10 +78,10 @@ public static class EventHandlers
             pushingPlayer.SendHint(
                 Plugin.Instance.Translation.PlayerPushCooldownHint.Replace("$remainingCooldown$",
                     remainingCooldown.ToString(CultureInfo.CurrentCulture)),
-                Plugin.Instance.Config.PlayerPushHintDuration
+                Plugin.Instance.Config!.PlayerPushHintDuration
             );
 
-            Logger.Debug("Player is on cooldown for pushing.", Plugin.Instance.Config.Debug);
+            Logger.Debug("Player is on cooldown for pushing.", Plugin.Instance.Config!.Debug);
             return;
         }
 
@@ -91,36 +94,36 @@ public static class EventHandlers
                 ~((1 << 1) | (1 << 13) | (1 << 16) | (1 << 28))))
             return;
 
+        // No player was hit
+        if (!Player.TryGet(raycastHit.transform.gameObject, out Player targetedPlayer)) return;
 
-        if (Player.TryGet(raycastHit.transform.gameObject, out Player targetedPlayer))
+        if (pushingPlayer == targetedPlayer)
         {
-            if (pushingPlayer == targetedPlayer)
-            {
-                Logger.Debug("Player tried to push themselves.");
-                return;
-            }
-
-            forwardDirection.y = 0;
-            Timing.RunCoroutine(ApplyPushForce(targetedPlayer, forwardDirection.normalized));
-
-            // Show hint to the pushingPlayer
-            pushingPlayer.SendHint(
-                Plugin.Instance.Translation.PlayerPushSuccessfulHint.Replace("$player$", targetedPlayer.Nickname),
-                Plugin.Instance.Config.PlayerPushHintDuration);
-
-            // Show hint to the targetedPlayer
-            targetedPlayer.SendHint(
-                Plugin.Instance.Translation.PlayerGotPushedHint.Replace("$player$", pushingPlayer.Nickname),
-                Plugin.Instance.Config.PlayerGotPushedHintDuration);
-
-            // Update the player's cooldown time
-            PushCooldowns[pushingPlayer.PlayerId] = currentTime;
+            Logger.Debug("Player tried to push themselves.", Plugin.Instance.Config!.Debug);
+            return;
         }
+
+        forwardDirection.y = 0;
+        bool playerInEzGateA = targetedPlayer.Room is { Name: RoomName.EzGateA };
+        Timing.RunCoroutine(ApplyPushForce(targetedPlayer, forwardDirection.normalized, playerInEzGateA));
+
+        // Show hint to the pushingPlayer
+        pushingPlayer.SendHint(
+            Plugin.Instance.Translation.PlayerPushSuccessfulHint.Replace("$player$", targetedPlayer.Nickname),
+            Plugin.Instance.Config!.PlayerPushHintDuration);
+
+        // Show hint to the targetedPlayer
+        targetedPlayer.SendHint(
+            Plugin.Instance.Translation.PlayerGotPushedHint.Replace("$player$", pushingPlayer.Nickname),
+            Plugin.Instance.Config!.PlayerGotPushedHintDuration);
+
+        // Update the player's cooldown time
+        PushCooldowns[pushingPlayer.PlayerId] = currentTime;
     }
 
-    private static IEnumerator<float> ApplyPushForce(Player player, Vector3 direction)
+    private static IEnumerator<float> ApplyPushForce(Player player, Vector3 direction, bool gateANerf = false)
     {
-        float pushDistance = Plugin.Instance.Config.PushForce; // total push distance
+        float pushDistance = Plugin.Instance.Config!.PushForce; // total push distance
         const float pushDuration = 0.000000000001f; // sweet spot for push timing
 
         const int mask = (1 << 0) // Default
@@ -130,11 +133,14 @@ public static class EventHandlers
 
         player.EnableEffect<Ensnared>(); // Freeze the users movement
 
-        for (int i = 0; i < 20; i++)
+        int steps = gateANerf ? 10 : 20;
+
+
+        for (int i = 0; i < steps; i++)
         {
             if (Physics.Raycast(player.Position, direction, 1f, mask))
             {
-                Logger.Debug("Can't push since wall.", Plugin.Instance.Config.Debug);
+                Logger.Debug("Can't push since wall.", Plugin.Instance.Config!.Debug);
                 break;
             }
 
@@ -145,7 +151,7 @@ public static class EventHandlers
 
         player.DisableEffect<Ensnared>(); // Unfreeze the users movement
 
-        Logger.Debug($"Push duration per step: {pushDuration / 50}", Plugin.Instance.Config.Debug);
-        Logger.Debug("Push force applied", Plugin.Instance.Config.Debug);
+        Logger.Debug($"Push duration per step: {pushDuration / 50}", Plugin.Instance.Config!.Debug);
+        Logger.Debug("Push force applied", Plugin.Instance.Config!.Debug);
     }
 }
