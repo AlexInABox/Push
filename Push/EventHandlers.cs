@@ -71,10 +71,17 @@ public static class EventHandlers
 
     private static void OnJoined(PlayerJoinedEventArgs ev)
     {
-        //Check what they have set as their baby preference
-        if (ServerSpecificSettingsSync.TryGetSettingOfUser(ev.Player.ReferenceHub, Plugin.Instance.Config!.NoobToggleId,
-                out SSTwoButtonsSetting setting) && setting.SyncIsB)
-            PlayersThatAreInBabyNoobMode.Add(ev.Player.PlayerId);
+        Timing.CallDelayed(5f, () =>
+        {
+            //Check what they have set as their baby preference
+            if (ServerSpecificSettingsSync.TryGetSettingOfUser(ev.Player.ReferenceHub,
+                    Plugin.Instance.Config!.NoobToggleId,
+                    out SSTwoButtonsSetting setting) && setting.SyncIsB)
+            {
+                PlayersThatAreInBabyNoobMode.Add(ev.Player.PlayerId);
+                Logger.Info("Player " + ev.Player.Nickname + " is in baby noob mode for pushing.");
+            }
+        });
     }
 
 
