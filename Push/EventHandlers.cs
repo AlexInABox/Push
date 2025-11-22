@@ -79,7 +79,8 @@ public static class EventHandlers
                     out SSTwoButtonsSetting setting) && setting.SyncIsB)
             {
                 PlayersThatAreInBabyNoobMode.Add(ev.Player.PlayerId);
-                Logger.Debug("Player " + ev.Player.Nickname + " is in baby noob mode for pushing.", Plugin.Instance.Config!.Debug);
+                Logger.Debug("Player " + ev.Player.Nickname + " is in baby noob mode for pushing.",
+                    Plugin.Instance.Config!.Debug);
             }
         });
     }
@@ -134,6 +135,7 @@ public static class EventHandlers
 
         forwardDirection.y = 0;
         bool weakPush = targetedPlayer.Room is { Name: RoomName.EzGateA } ||
+                        targetedPlayer.Room is { Name: RoomName.Hcz106 } ||
                         PlayersThatAreInBabyNoobMode.Contains(targetedPlayer.PlayerId) ||
                         PlayersThatAreInBabyNoobMode.Contains(pushingPlayer.PlayerId);
         Timing.RunCoroutine(ApplyPushForce(targetedPlayer, forwardDirection.normalized, weakPush));
