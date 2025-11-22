@@ -79,7 +79,7 @@ public static class EventHandlers
                     out SSTwoButtonsSetting setting) && setting.SyncIsB)
             {
                 PlayersThatAreInBabyNoobMode.Add(ev.Player.PlayerId);
-                Logger.Info("Player " + ev.Player.Nickname + " is in baby noob mode for pushing.");
+                Logger.Debug("Player " + ev.Player.Nickname + " is in baby noob mode for pushing.", Plugin.Instance.Config!.Debug);
             }
         });
     }
