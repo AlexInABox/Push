@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using CustomPlayerEffects;
+using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
 using MapGeneration;
 using MEC;
@@ -14,6 +16,7 @@ namespace Push;
 public static class EventHandlers
 {
     private static readonly Dictionary<int, float> PushCooldowns = new();
+    private static readonly List<int> PlayersThatAreInBabyNoobMode = [];
 
     public static void RegisterEvents()
     {
@@ -26,7 +29,15 @@ public static class EventHandlers
                 Plugin.Instance.Config!.KeybindId,
                 Plugin.Instance.Translation.KeybindSettingLabel,
                 KeyCode.None, false, false,
-                Plugin.Instance.Translation.KeybindSettingHintDescription)
+                Plugin.Instance.Translation.KeybindSettingHintDescription),
+            new SSTwoButtonsSetting(
+                Plugin.Instance.Config!.NoobToggleId,
+                "Wie stark möchtest du schubsen / geschubst werden?",
+                "Normal",
+                "Schwach",
+                false,
+                "Wenn du \"Schwach\" einstellst, wird deine Schubskraft um 50 % reduziert, UND andere Personen schubsen dich ebenfalls nur noch halb so weit! Diese Einstellung wird erst ab der NÄCHSTEN RUNDE wirksam."
+            )
         };
 
         ServerSpecificSettingBase[] existing = ServerSpecificSettingsSync.DefinedSettings ?? [];
@@ -35,6 +46,8 @@ public static class EventHandlers
         extra.CopyTo(combined, existing.Length);
         ServerSpecificSettingsSync.DefinedSettings = combined;
         ServerSpecificSettingsSync.UpdateDefinedSettings();
+
+        PlayerEvents.Joined += OnJoined;
     }
 
     public static void UnregisterEvents()
@@ -55,6 +68,15 @@ public static class EventHandlers
             keybindSetting.SyncIsPressed)
             TryToPush(player);
     }
+
+    private static void OnJoined(PlayerJoinedEventArgs ev)
+    {
+        //Check what they have set as their baby preference
+        if (ServerSpecificSettingsSync.TryGetSettingOfUser(ev.Player.ReferenceHub, Plugin.Instance.Config!.NoobToggleId,
+                out SSTwoButtonsSetting setting) && setting.SyncIsB)
+            PlayersThatAreInBabyNoobMode.Add(ev.Player.PlayerId);
+    }
+
 
     private static void TryToPush(Player pushingPlayer)
     {
@@ -104,8 +126,10 @@ public static class EventHandlers
         }
 
         forwardDirection.y = 0;
-        bool playerInEzGateA = targetedPlayer.Room is { Name: RoomName.EzGateA };
-        Timing.RunCoroutine(ApplyPushForce(targetedPlayer, forwardDirection.normalized, playerInEzGateA));
+        bool weakPush = targetedPlayer.Room is { Name: RoomName.EzGateA } ||
+                        PlayersThatAreInBabyNoobMode.Contains(targetedPlayer.PlayerId) ||
+                        PlayersThatAreInBabyNoobMode.Contains(pushingPlayer.PlayerId);
+        Timing.RunCoroutine(ApplyPushForce(targetedPlayer, forwardDirection.normalized, weakPush));
 
         // Show hint to the pushingPlayer
         pushingPlayer.SendHint(
@@ -121,7 +145,7 @@ public static class EventHandlers
         PushCooldowns[pushingPlayer.PlayerId] = currentTime;
     }
 
-    private static IEnumerator<float> ApplyPushForce(Player player, Vector3 direction, bool gateANerf = false)
+    private static IEnumerator<float> ApplyPushForce(Player player, Vector3 direction, bool weakPush = false)
     {
         float pushDistance = Plugin.Instance.Config!.PushForce; // total push distance
         const float pushDuration = 0.000000000001f; // sweet spot for push timing
@@ -133,7 +157,7 @@ public static class EventHandlers
 
         player.EnableEffect<Ensnared>(); // Freeze the users movement
 
-        int steps = gateANerf ? 10 : 20;
+        int steps = weakPush ? 10 : 20;
 
 
         for (int i = 0; i < steps; i++)
